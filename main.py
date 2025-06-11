@@ -60,3 +60,73 @@ def get_balls_data(frame_arr):
         "blue":  [center_blue, radius_blue],
     }
 
+
+
+pygame.init()
+display = pygame.display.set_mode((1280, 720))
+trail_surf = pygame.Surface((1280, 720), pygame.SRCALPHA)
+clock = pygame.time.Clock()
+running = True
+triangle_points = [] # x, y coordinates of triangle - center of each ball
+font = pygame.font.SysFont("Arial", 16)
+
+
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    #surf = pygame.surfarray.make_surface(frame_arr)
+
+    # display.fill((0, 0, 0))
+    #display.blit(surf, (0, 0))
+
+
+    frame_arr, i = next(frame_array_generator)
+    if i > stream.frames - 2:
+        pygame.quit()
+        break
+    balls_data = get_balls_data(frame_arr)
+
+
+    display.fill((0,0,0))
+
+
+    for key in balls_data:
+        c, r = balls_data[key]
+        pygame.draw.circle(display, center=c, radius=r, color=pygame.Color(key), width=0)
+        pygame.draw.circle(display, center=c, radius=108, color=pygame.Color(key), width=1)
+
+        triangle_points.append(c)
+
+    eul = []
+    for key1, key2 in combinations(balls_data.keys(), 2):
+        c1 = balls_data[key1][0] #center of first ball
+        c2 = balls_data[key2][0] #center of second ball
+        eucli_distance = c1.distance_to(c2)
+        eul.append(eucli_distance)
+
+        pygame.draw.line(display, color=pygame.Color('yellow'), start_pos=c1, end_pos=c2, width=1)
+        text = font.render(f'{int(eucli_distance)}', True, pygame.Color('cyan'))  # Text, Anti-aliasing, Color
+        display.blit(text, ((c1 + c2)/2))
+
+
+    centroid = np.mean(triangle_points, axis=0) #center of triangle
+
+
+    a = 2 * int(np.mean(eul))
+
+
+
+    pygame.gfxdraw.pixel(trail_surf, int(centroid[0]), int(a), pygame.Color('white'))
+
+    display.blit(trail_surf, (0,0))
+
+    pygame.display.update()
+    pygame.display.flip()
+    clock.tick(120)
+
+pygame.quit()
+
+
+
